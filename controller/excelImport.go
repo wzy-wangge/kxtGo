@@ -65,8 +65,8 @@ func (excel *ExcelImportTrademarkController)  GinHandler(c *gin.Context){
 				switch k{
 				case 1,2,3,4,5,6,7,8,9:
 					if colCell == "" {
-						axis,_ := excelize.CoordinatesToCellName(rowK,12)
-						_ = excelFile.SetCellValue("Sheet1", axis, "第"+strconv.Itoa(k)+"行参数不能为空")
+						axis,_ := excelize.CoordinatesToCellName(13,rowK+1)
+						_ = excelFile.SetCellValue("Sheet1", axis, "第"+strconv.Itoa(k)+"列参数不能为空")
 						break rowFor
 					}
 				}
@@ -89,7 +89,14 @@ func (excel *ExcelImportTrademarkController)  GinHandler(c *gin.Context){
 							classIdStrDb += ","+colCellListVal[0:pos]
 						}else{
 							classIdStr = colCellListVal[0:pos]
-							classIdStrDb = colCellListVal[0:pos]
+							infoModel := new(model.InfoModel)
+							MysqlDb.Table("xs_info").Where("title",colCellListVal).Select("id").Limit(1).Find(infoModel)
+							if infoModel.Id == 0 {
+								axis,_ := excelize.CoordinatesToCellName(13,rowK+1)
+								_ = excelFile.SetCellValue("Sheet1", axis, "第"+strconv.Itoa(k)+"列类目系统不存在")
+								break rowFor
+							}
+							classIdStrDb = strconv.Itoa(infoModel.Id)
 						}
 					}
 					XsBrandSellType.Types = classIdStrDb
@@ -109,8 +116,8 @@ func (excel *ExcelImportTrademarkController)  GinHandler(c *gin.Context){
 					}
 					ser , err := imagesMergeFunc.ImageMerge(titleStr,classStr)
 					if err != nil {
-						axis,_ := excelize.CoordinatesToCellName(rowK,12)
-						_ = excelFile.SetCellValue("Sheet1", axis, "第"+strconv.Itoa(k)+"行参数不能为空")
+						axis,_ := excelize.CoordinatesToCellName(13,rowK+1)
+						_ = excelFile.SetCellValue("Sheet1", axis, "第"+strconv.Itoa(k)+"列合并图片失败")
 						break rowFor
 					}
 
@@ -133,9 +140,6 @@ func (excel *ExcelImportTrademarkController)  GinHandler(c *gin.Context){
 				case 11:
 					XsBrandSellType.Cost = colCell
 				}
-
-
-
 			}
 		}
 			XsBrandSellType.UserId,_ = strconv.Atoi(userId)
